@@ -2,11 +2,11 @@
   'use strict';
 
   if (document.getElementById('zyro-algo-container')) {
-    alert('⚡ ZYRO ULTIMATE SNIPER PRO is already active on screen!');
+    alert('⚡ ZYRO 2.0 SNIPER PRO is already active on screen!');
     return;
   }
 
-  // --- 1. Audio Sound FX Synthesis (Beep, Win Chime, Loss Tone) ---
+  // --- 1. Audio Sound FX Synthesis ---
   const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   function playSoundFX(type) {
     try {
@@ -17,18 +17,16 @@
       gain.connect(audioCtx.destination);
 
       if (type === 'win') {
-        // High-pitched victory arpeggio
         osc.type = 'triangle';
-        osc.frequency.setValueAtTime(523.25, audioCtx.currentTime); // C5
-        osc.frequency.exponentialRampToValueAtTime(659.25, audioCtx.currentTime + 0.1); // E5
-        osc.frequency.exponentialRampToValueAtTime(783.99, audioCtx.currentTime + 0.2); // G5
-        osc.frequency.exponentialRampToValueAtTime(1046.50, audioCtx.currentTime + 0.35); // C6
+        osc.frequency.setValueAtTime(523.25, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(659.25, audioCtx.currentTime + 0.1);
+        osc.frequency.exponentialRampToValueAtTime(783.99, audioCtx.currentTime + 0.2);
+        osc.frequency.exponentialRampToValueAtTime(1046.50, audioCtx.currentTime + 0.35);
         gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
         osc.start();
         osc.stop(audioCtx.currentTime + 0.5);
       } else if (type === 'loss') {
-        // Low cautionary tone
         osc.type = 'sawtooth';
         osc.frequency.setValueAtTime(320, audioCtx.currentTime);
         osc.frequency.linearRampToValueAtTime(180, audioCtx.currentTime + 0.4);
@@ -37,7 +35,6 @@
         osc.start();
         osc.stop(audioCtx.currentTime + 0.4);
       } else if (type === 'sniper') {
-        // High-tech laser lock beep
         osc.type = 'sine';
         osc.frequency.setValueAtTime(880, audioCtx.currentTime);
         osc.frequency.exponentialRampToValueAtTime(1760, audioCtx.currentTime + 0.15);
@@ -49,7 +46,6 @@
     } catch(e) {}
   }
 
-  // Voice engine
   function speakVoice(text) {
     try {
       if ('speechSynthesis' in window) {
@@ -103,7 +99,6 @@
     #zyro-algo-container.zyro-minimized .zyro-min-icon { display: block !important; }
     #zyro-algo-container.zyro-minimized .zyro-body, #zyro-algo-container.zyro-minimized .zyro-header { display: none !important; }
 
-    /* Mode Tabs (Auto vs Signal Only) */
     .zyro-mode-tabs { display: flex; background: rgba(0,0,0,0.6); border: 1px solid rgba(0,242,254,0.2); border-radius: 6px; padding: 2px; margin-bottom: 6px; }
     .zyro-mode-tab { flex: 1; text-align: center; font-size: 8.5px; font-family: 'Orbitron', monospace; font-weight: 800; padding: 4px 0; color: #64748b; cursor: pointer; border-radius: 4px; }
     .zyro-mode-tab.active { background: linear-gradient(135deg, #0284c7, #00f2fe); color: #fff; }
@@ -123,7 +118,6 @@
     .zyro-stat-item { display: flex; justify-content: space-between; color: #94a3b8; }
     .zyro-stat-item b { color: #e2e8f0; font-family: 'Orbitron', monospace; }
 
-    /* Inputs for SL, TP, Amount, MTG */
     .zyro-inputs-grid {
       display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-bottom: 6px;
     }
@@ -140,7 +134,6 @@
     .zyro-btn-start { background: linear-gradient(135deg, #00f2fe, #0284c7); color: #fff; box-shadow: 0 0 15px rgba(0,242,254,0.4); }
     .zyro-btn-stop { background: linear-gradient(135deg, #ef4444, #991b1b); color: #fff; box-shadow: 0 0 15px rgba(239,68,68,0.4); }
 
-    /* Popups */
     #zyro-popup {
       position: fixed; top: 40%; left: 50%; transform: translate(-50%, -50%) scale(0.3);
       padding: 16px 24px; border-radius: 14px; z-index: 2147483647; font-family: 'Orbitron', monospace;
@@ -153,17 +146,15 @@
   `;
   document.head.appendChild(style);
 
-  // Popup Container
   const popup = document.createElement('div');
   popup.id = 'zyro-popup';
   document.body.appendChild(popup);
 
-  // Bot Main Container
   const container = document.createElement('div');
   container.id = 'zyro-algo-container';
   container.innerHTML = `
     <div class="zyro-header" id="zyroDrag">
-      <div class="zyro-brand">⚡ <span>ZYRO</span> ULTIMATE PRO</div>
+      <div class="zyro-brand">⚡ <span>ZYRO</span> 2.0 SNIPER</div>
       <div class="zyro-ctrls">
         <span id="zyroMinBtn">—</span>
         <span id="zyroCloseBtn">✕</span>
@@ -176,8 +167,8 @@
       </div>
 
       <div class="zyro-signal-card" id="zyroSignalCard">
-        <div class="zyro-confluence" id="zyroConfluence">ICT & SMC MATRIX READY</div>
-        <div class="zyro-direction" id="zyroDir" style="color:#00f2fe;">WAITING SNIPER ENTRY</div>
+        <div class="zyro-confluence" id="zyroConfluence">SCANNING CANDLES</div>
+        <div class="zyro-direction" id="zyroDir" style="color:#00f2fe;">READY FOR ENTRY</div>
       </div>
 
       <div class="zyro-stats-grid">
@@ -211,13 +202,12 @@
         </div>
       </div>
 
-      <button class="zyro-btn zyro-btn-start" id="zyroToggleBtn">START ZYRO AUTO</button>
+      <button class="zyro-btn zyro-btn-start" id="zyroToggleBtn">START ZYRO SNIPER</button>
     </div>
     <div class="zyro-min-icon">ZYRO</div>
   `;
   document.body.appendChild(container);
 
-  // Result display
   function showResultPopup(isWin, entryP, exitP) {
     popup.className = isWin ? 'zyro-win-pop show' : 'zyro-loss-pop show';
     if (isWin) {
@@ -232,7 +222,6 @@
     setTimeout(() => popup.classList.remove('show'), 2600);
   }
 
-  // --- Mobile Touch Dragging & Minimize ---
   let isDragging = false, currentX, currentY, initialX, initialY, xOffset = 0, yOffset = 0;
   container.addEventListener("touchstart", function (e) {
     if (e.target.tagName !== "INPUT" && e.target.tagName !== "BUTTON") {
@@ -267,7 +256,6 @@
     popup.remove();
   };
 
-  // --- Mode Switching (Auto vs Signal Only) ---
   let isAutoMode = true;
   const tabAuto = document.getElementById('tabAuto');
   const tabManual = document.getElementById('tabManual');
@@ -283,7 +271,6 @@
     tabAuto.classList.remove('active');
   };
 
-  // --- 3. 100% REAL LIVE PRICE SCRAPER ---
   function getLiveRealPrice() {
     const priceNodes = document.querySelectorAll("[class*='current-price'], [class*='price-value'], [class*='value__val'], [class*='deal-finish'], .live-price");
     for (let el of priceNodes) {
@@ -328,23 +315,12 @@
     return { upBtn, downBtn };
   }
 
-  // Auto-switch to another currency pair on loss streak
-  function switchRandomCurrency() {
-    const assets = document.querySelectorAll('.Z2fyK, [class*="asset-item"], .asset-select__item');
-    if (assets.length > 0) {
-      const randIdx = Math.floor(Math.random() * assets.length);
-      assets[randIdx].click();
-      console.log("[ZYRO] Auto Switched to Currency to avoid bad market.");
-    }
-  }
-
-  // --- 4. ADVANCED SMC + ICT + BOLLINGER + ORDER BLOCK ENGINE ---
   let priceTicks = [];
   function recordCurrentPrice() {
     const p = getLiveRealPrice();
     if (p !== null) {
       priceTicks.push(p);
-      if (priceTicks.length > 100) priceTicks.shift();
+      if (priceTicks.length > 60) priceTicks.shift();
     }
   }
 
@@ -370,94 +346,71 @@
     return 100 - (100 / (1 + rs));
   }
 
-  function calculateBollinger(prices, period = 20) {
-    if (prices.length < period) return { mid: prices[prices.length-1], up: prices[prices.length-1], low: prices[prices.length-1] };
-    const slice = prices.slice(-period);
-    const mean = slice.reduce((a,b)=>a+b,0)/period;
-    const variance = slice.reduce((a,b)=>a+Math.pow(b-mean,2),0)/period;
-    const std = Math.sqrt(variance);
-    return { mid: mean, up: mean + std*2, low: mean - std*2 };
-  }
-
-  function evaluateSniperSignal() {
+  function evaluateAdaptiveSignal() {
     recordCurrentPrice();
     const p = priceTicks;
-    if (p.length < 20) {
-      return { setupFound: false, reason: "ACCUMULATING TICK STREAM" };
-    }
-
-    const cur = p[p.length - 1];
-    const prev = p[p.length - 2];
-    const high = Math.max(...p);
-    const low = Math.min(...p);
-    const range = high - low;
-
     let buyScore = 0;
     let sellScore = 0;
     let confluences = [];
 
-    // 1. 💧 Smart Money Liquidity Sweep & Wick Rejection
-    if (prev <= low && cur > low) {
-      buyScore += 45;
-      confluences.push("Buy-Side Liquidity Sweep");
-    } else if (prev >= high && cur < high) {
-      sellScore += 45;
-      confluences.push("Sell-Side Liquidity Sweep");
-    }
+    if (p.length >= 8) {
+      const cur = p[p.length - 1];
+      const prev = p[p.length - 2];
+      const high = Math.max(...p);
+      const low = Math.min(...p);
 
-    // 2. ⚡ Triple EMA Cross Trend Alignment (EMA 9, 21, 50)
-    const ema9 = calculateEMA(p, 9);
-    const ema21 = calculateEMA(p, 21);
-    if (ema9 > ema21) {
-      buyScore += 25;
-      confluences.push("EMA Golden Flow");
-    } else {
-      sellScore += 25;
-      confluences.push("EMA Death Flow");
-    }
+      // 1. Momentum Flow
+      const momentum = cur - p[Math.max(0, p.length - 5)];
+      if (momentum > 0) {
+        buyScore += 35;
+        confluences.push("Bullish Momentum Flow");
+      } else {
+        sellScore += 35;
+        confluences.push("Bearish Momentum Flow");
+      }
 
-    // 3. 🎯 RSI (14) Extreme Exhaustion Filter
-    const rsi = calculateRSI(p, 14);
-    if (rsi <= 32) {
-      buyScore += 35;
-      confluences.push("RSI Oversold Bounce");
-    } else if (rsi >= 68) {
-      sellScore += 35;
-      confluences.push("RSI Overbought Drop");
-    }
+      // 2. Liquidity Rebound
+      if (prev <= low && cur > low) {
+        buyScore += 35;
+        confluences.push("Liquidity Rebound");
+      } else if (prev >= high && cur < high) {
+        sellScore += 35;
+        confluences.push("Liquidity Sweep Drop");
+      }
 
-    // 4. 🏛️ Bollinger Band Dynamic Extreme Touches
-    const bb = calculateBollinger(p, 20);
-    if (cur <= bb.low) {
-      buyScore += 25;
-      confluences.push("Lower Bollinger Rejection");
-    } else if (cur >= bb.up) {
-      sellScore += 25;
-      confluences.push("Upper Bollinger Rejection");
-    }
+      // 3. Fast EMA Flow
+      const emaFast = calculateEMA(p, Math.min(5, p.length));
+      const emaSlow = calculateEMA(p, Math.min(15, p.length));
+      if (emaFast > emaSlow) {
+        buyScore += 30;
+        confluences.push("EMA Golden Alignment");
+      } else {
+        sellScore += 30;
+        confluences.push("EMA Death Alignment");
+      }
 
-    // 5. 📉 Order Block / Imbalance Discount Zone
-    if (range > 0) {
-      if (cur < low + range * 0.22) {
-        buyScore += 20;
-        confluences.push("ICT Discount Zone");
-      } else if (cur > low + range * 0.78) {
-        sellScore += 20;
-        confluences.push("ICT Premium Zone");
+      // 4. RSI (14)
+      const rsi = calculateRSI(p, Math.min(14, p.length));
+      if (rsi < 45) {
+        buyScore += 25;
+      } else if (rsi > 55) {
+        sellScore += 25;
       }
     }
 
-    // High Confluence Threshold: Must score at least 65+ points
-    if (buyScore >= 65 && buyScore > sellScore) {
-      return { setupFound: true, direction: "CALL", confluences: confluences.slice(0, 2).join(" + ") };
-    } else if (sellScore >= 65 && sellScore > buyScore) {
-      return { setupFound: true, direction: "PUT", confluences: confluences.slice(0, 2).join(" + ") };
+    if (buyScore === sellScore) {
+      if (priceTicks.length >= 2 && priceTicks[priceTicks.length - 1] >= priceTicks[priceTicks.length - 2]) {
+        buyScore += 10;
+      } else {
+        sellScore += 10;
+      }
     }
 
-    return { setupFound: false, reason: "WAITING HIGH CONFLUENCE" };
+    const direction = buyScore >= sellScore ? "CALL" : "PUT";
+    const label = confluences.slice(0, 2).join(" + ") || "SMC TREND FLOW";
+    return { direction, confluenceText: label };
   }
 
-  // --- 5. EXECUTION & AUTO RISK MANAGEMENT (SL & TP) ---
   let isRunning = false;
   let baseAmount = 1;
   let currentAmount = 1;
@@ -492,12 +445,12 @@
       currentStep = 0;
 
       toggleBtn.className = 'zyro-btn zyro-btn-stop';
-      toggleBtn.innerText = 'STOP ZYRO AUTO';
+      toggleBtn.innerText = 'STOP ZYRO SNIPER';
       playSoundFX('sniper');
-      speakVoice("Zyro Ultimate Activated");
+      speakVoice("Zyro Sniper Activated");
     } else {
       toggleBtn.className = 'zyro-btn zyro-btn-start';
-      toggleBtn.innerText = 'START ZYRO AUTO';
+      toggleBtn.innerText = 'START ZYRO SNIPER';
       cardDir.innerText = 'PAUSED';
       cardDir.style.color = '#00f2fe';
     }
@@ -521,11 +474,9 @@
         console.log(`[ZYRO AUTO] Executed PUT at ${entryPrice} ($${currentAmount})`);
       }
     } else {
-      // Signal Only Voice Alert
-      speakVoice(`Signal Alert: ${direction}! Check chart.`);
+      speakVoice(`Signal: ${direction}! Trade now.`);
     }
 
-    // Verify Real Result after 59.5 seconds
     setTimeout(() => {
       const exitPrice = getLiveRealPrice();
       let isWin = false;
@@ -538,7 +489,7 @@
 
       if (isWin) {
         wins++;
-        const profitGain = currentAmount * 0.85; // ~85% average payout
+        const profitGain = currentAmount * 0.85;
         netProfit += profitGain;
         currentStep = 0;
         currentAmount = baseAmount;
@@ -552,12 +503,10 @@
         } else {
           currentStep = 0;
           currentAmount = baseAmount;
-          switchRandomCurrency(); // Loss streak protection
         }
         showResultPopup(false, entryPrice || "N/A", exitPrice || "N/A");
       }
 
-      // Update Dashboard
       const total = wins + losses;
       const winRate = total > 0 ? ((wins / total) * 100).toFixed(0) : 100;
       accEl.innerText = `${winRate}%`;
@@ -567,9 +516,8 @@
       netProfitEl.style.color = netProfit >= 0 ? '#00e676' : '#ef4444';
       isWaitingResult = false;
 
-      // Risk Management Auto-Stop
       if (netProfit <= -stopLossLimit) {
-        alert(`⚠️ STOP LOSS REACHED (-$${stopLossLimit}). Zyro Auto Stopped to protect capital!`);
+        alert(`⚠️ STOP LOSS HIT (-$${stopLossLimit}). Zyro Auto Stopped to protect capital!`);
         toggleBtn.click();
       } else if (netProfit >= takeProfitLimit) {
         alert(`🎉 TAKE PROFIT HIT (+$${takeProfitLimit})! Alhamdulillah, target achieved!`);
@@ -578,7 +526,6 @@
     }, 59500);
   }
 
-  // --- Main 1-Second Precision Loop ---
   setInterval(() => {
     recordCurrentPrice();
     const d = new Date();
@@ -586,51 +533,38 @@
     const s = d.getSeconds();
     clockEl.innerText = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 
-    // Live trend indicator
-    if (priceTicks.length >= 10) {
-      const e9 = calculateEMA(priceTicks, 9);
-      const e21 = calculateEMA(priceTicks, 21);
-      trendEl.innerText = e9 > e21 ? "▲ BULLISH" : "▼ BEARISH";
-      trendEl.style.color = e9 > e21 ? "#00e676" : "#ef4444";
+    if (priceTicks.length >= 5) {
+      const eFast = calculateEMA(priceTicks, 5);
+      const eSlow = calculateEMA(priceTicks, Math.min(15, priceTicks.length));
+      trendEl.innerText = eFast > eSlow ? "▲ BULLISH" : "▼ BEARISH";
+      trendEl.style.color = eFast > eSlow ? "#00e676" : "#ef4444";
     }
 
     if (!isRunning || isWaitingResult) return;
 
-    // Phase 1: Deep scan from 40s to 56s
-    if (s >= 40 && s <= 56) {
-      const signal = evaluateSniperSignal();
-      if (signal.setupFound) {
-        cardConfluence.innerText = `[${signal.confluences}]`;
-        cardDir.innerText = `CONFIRMED: ${signal.direction} (${57 - s}s)`;
-        cardDir.style.color = signal.direction === 'CALL' ? '#00e676' : '#ef4444';
-      } else {
-        cardConfluence.innerText = 'FILTERING BAD CANDLES';
-        cardDir.innerText = 'WAITING CONFLUENCE...';
-        cardDir.style.color = '#f59e0b';
-      }
+    // Scan phase: 42s to 56s
+    if (s >= 42 && s <= 56) {
+      const sig = evaluateAdaptiveSignal();
+      cardConfluence.innerText = `[${sig.confluenceText}]`;
+      cardDir.innerText = `${sig.direction === 'CALL' ? '▲ BUY (CALL)' : '▼ SELL (PUT)'} (${57 - s}s)`;
+      cardDir.style.color = sig.direction === 'CALL' ? '#00e676' : '#ef4444';
     }
-    // Phase 2: Sniper Execution at 57s
+    // Execution at exactly 57 seconds
     else if (s === 57 && lastTradedMinute !== m) {
-      const signal = evaluateSniperSignal();
-      if (signal.setupFound) {
-        lastTradedMinute = m;
-        cardConfluence.innerText = `[${signal.confluences}]`;
-        cardDir.innerText = signal.direction === 'CALL' ? '▲ SNIPER CALL EXECUTED' : '▼ SNIPER PUT EXECUTED';
-        cardDir.style.color = signal.direction === 'CALL' ? '#00e676' : '#ef4444';
+      lastTradedMinute = m;
+      const sig = evaluateAdaptiveSignal();
+      cardConfluence.innerText = `[${sig.confluenceText}]`;
+      cardDir.innerText = sig.direction === 'CALL' ? '▲ AUTO BUY EXECUTED' : '▼ AUTO SELL EXECUTED';
+      cardDir.style.color = sig.direction === 'CALL' ? '#00e676' : '#ef4444';
 
-        executeSniperTrade(signal.direction, signal.confluences);
-      } else {
-        cardConfluence.innerText = 'LOW ACCURACY SKIPPED';
-        cardDir.innerText = 'SKIPPED FOR SAFETY';
-        cardDir.style.color = '#94a3b8';
-      }
+      executeSniperTrade(sig.direction, sig.confluenceText);
     } 
-    else if (s < 40) {
-      cardConfluence.innerText = 'SMC + BOLLINGER + FVG ACTIVE';
-      cardDir.innerText = 'HUNTING SNIPER LEVEL...';
+    else if (s < 42) {
+      cardConfluence.innerText = 'ADAPTIVE SMC & EMA ACTIVE';
+      cardDir.innerText = 'TRACKING CANDLE...';
       cardDir.style.color = '#00f2fe';
     }
   }, 1000);
 
-  speakVoice("Zyro Ultimate Sniper Pro Ready");
+  speakVoice("Zyro 2.0 Sniper Ready");
 })();
