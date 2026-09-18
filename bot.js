@@ -1,5 +1,5 @@
 // ============================================================
-// ZYRO AI PRO v5.0 — FULL AUTO ZERO-INPUT EDITION
+// ZYRO AI PRO v5.0 — FULL AUTO ZERO-INPUT EDITION (FIXED)
 // Complete auto trading bot with multi-layer data source
 // ============================================================
 
@@ -63,7 +63,6 @@
     }
     if (!obj) return null;
 
-    // Try every known tick format
     const candidates = [
       obj.type === 'tick' && obj.price ? { asset: obj.asset || obj.symbol, price: +obj.price, time: obj.time || Date.now() } : null,
       obj.t === 'q' && obj.p ? { asset: obj.s, price: +obj.p, time: obj.ts || Date.now() } : null,
@@ -76,7 +75,6 @@
       if (c && c.asset && c.price && !isNaN(c.price) && c.price > 0) return c;
     }
 
-    // Array format: ["tick", {...}]
     if (Array.isArray(obj) && obj.length === 2 && typeof obj[0] === 'string') {
       if (obj[0] === 'tick' && obj[1]) return { asset: obj[1].asset || obj[1].symbol, price: +obj[1].price, time: Date.now() };
       if (obj[0] === 'quotes' && Array.isArray(obj[1])) {
@@ -158,7 +156,7 @@
       if (p && p > 0) { Diag.dom.reads++; return p; }
     }
 
-    // Layer 2: DOM - specific selectors
+    // Layer 2: DOM specific selectors
     const sels = [
       '[class*="current-price"]', '[class*="price-value"]', '[class*="value__val"]',
       '[class*="deal-finish"]', '[class*="quote-price"]', '[class*="asset-price"]',
@@ -240,12 +238,10 @@
     } catch (e) {}
 
     Diag.dom.fails++;
-    // Fallback: last known (up to 30s old)
     if (Diag.dom.lastPrice && Date.now() - Diag.dom.lastReadTime < 30000) return Diag.dom.lastPrice;
     return null;
   }
 
-  // Poll price every second
   setInterval(() => {
     const p = readPrice();
     if (p) {
@@ -256,7 +252,6 @@
     }
   }, 1000);
 
-  // Build candles from price history
   function getDynCandles() {
     if (!priceHistory.length) return [];
     const buckets = {};
@@ -344,7 +339,7 @@
   };
 
   // ============================================================
-  // 4. SIGNAL ENGINE — Never returns null
+  // 4. SIGNAL ENGINE
   // ============================================================
   function detectPattern(c) {
     if (c.length < 2) return { dir: null, w: 0, n: 'NONE' };
@@ -658,10 +653,10 @@
   // ============================================================
   // 10. TRADE EXECUTION
   // ============================================================
-  let running = false;
+  let isRunning = false;
   let baseAmt = 1, curAmt = 1, mtgMult = 2.2, step = 0;
   let wins = 0, losses = 0, pnl = 0;
-  let waitResult = false, lastMinute = -1, lastDir = null;
+  let isWaiting = false, lastMinute = -1, lastDir = null;
   let stopLoss = 15, takeProfit = 30;
 
   function setAmount(a) {
@@ -685,7 +680,8 @@
     return { up, dn };
   }
 
-  async function waitResult() {
+  // ⚠️ FIXED: renamed from waitResult to avoid collision with variable
+  async function waitForTradeResult() {
     const sel = '[class*="history"] [class*="item"],[class*="trades-list"] [class*="item"],[class*="positions"] [class*="item"]';
     const before = document.querySelectorAll(sel).length;
     const t0 = Date.now();
@@ -722,13 +718,13 @@
     setAmount(curAmt);
     const entry = readPrice() || Diag.dom.lastPrice;
     lastDir = dir;
-    waitResult = true;
+    isWaiting = true;
 
     if (dir === 'CALL' && up) { up.click(); soundTrade(); }
     else if (dir === 'PUT' && dn) { dn.click(); soundTrade(); }
-    else { waitResult = false; return; }
+    else { isWaiting = false; return; }
 
-    const result = await waitResult();
+    const result = await waitForTradeResult();
     const exit = readPrice() || Diag.dom.lastPrice;
     const payout = 85;
     const gain = curAmt * (payout / 100);
@@ -751,15 +747,14 @@
       entry, exit, result, profit: result === 'WIN' ? gain : -curAmt
     });
     updateUI();
-    waitResult = false;
+    isWaiting = false;
 
-    // SL / TP
     if (pnl <= -stopLoss) {
       alert(`⚠️ STOP LOSS HIT (-$${stopLoss})`);
-      if (running) startBtn.click();
+      if (isRunning) startBtn.click();
     } else if (pnl >= takeProfit) {
       alert(`🎉 TAKE PROFIT (+$${takeProfit})!`);
-      if (running) startBtn.click();
+      if (isRunning) startBtn.click();
     }
   }
 
@@ -777,8 +772,8 @@
   // 11. START / STOP
   // ============================================================
   startBtn.onclick = () => {
-    running = !running;
-    if (running) {
+    isRunning = !isRunning;
+    if (isRunning) {
       baseAmt = 1;
       curAmt = baseAmt;
       step = 0;
@@ -800,7 +795,6 @@
     const p = readPrice();
     if (p) lastPrice = p;
 
-    // Badge
     if (wsState.connected && wsState.stats.ticks > 0) {
       badgeEl.className = 'badge ok';
       badgeEl.innerText = 'WS';
@@ -818,7 +812,7 @@
     const m = d.getMinutes(), s = d.getSeconds();
     clkEl.innerText = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 
-    if (!running || waitResult) return;
+    if (!isRunning || isWaiting) return;
 
     const candles = getCandles();
     const sig = analyze(candles);
@@ -829,7 +823,6 @@
     cfillEl.style.width = sig.conf + '%';
     sigEl.innerText = sig.signals.map(x => x.name).join(' • ');
 
-    // Execute at :58
     if (s === 58 && lastMinute !== m) {
       lastMinute = m;
       let dir = sig.dir, pat = sig.pattern;
@@ -849,8 +842,8 @@
     diag: () => Diag.report(),
     price: () => lastPrice,
     analyze: () => analyze(getCandles()),
-    start: () => { if (!running) startBtn.click(); },
-    stop: () => { if (running) startBtn.click(); },
+    start: () => { if (!isRunning) startBtn.click(); },
+    stop: () => { if (isRunning) startBtn.click(); },
     stats: () => Log.stats(),
     assets: () => Object.keys(wsState.lastPrice)
   };
@@ -861,7 +854,7 @@
     dump: () => Diag.report()
   };
 
-  console.log('%c⚡ ZYRO v' + VERSION + ' FULL AUTO READY', 'color:#00f2fe;font-size:14px;font-weight:bold');
+  console.log('%c⚡ ZYRO v' + VERSION + ' FULL AUTO READY (FIXED)', 'color:#00f2fe;font-size:14px;font-weight:bold');
   console.log('Commands: ZYRO.start() | ZYRO.stop() | ZYRO.diag() | ZYRO.price() | ZYRO.analyze() | ZYRO_WS.getAssets()');
 
 })();
