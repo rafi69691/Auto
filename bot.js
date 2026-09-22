@@ -1,4 +1,3 @@
-
 (function () {
   'use strict';
 
@@ -130,9 +129,9 @@
       display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-bottom: 6px;
     }
     .zyro-input-wrap label { font-size: 7.5px; color: #64748b; font-weight: 700; display: block; margin-bottom: 1px; }
-    .zyro-input-wrap input {
+    .zyro-input-wrap input, .zyro-input-wrap select {
       width: 100%; background: #0f172a; border: 1px solid #1e293b; color: #00f2fe;
-      border-radius: 6px; padding: 3px; font-size: 9.5px; font-family: 'Orbitron', monospace; text-align: center;
+      border-radius: 6px; padding: 3px; font-size: 9px; font-family: 'Orbitron', monospace; text-align: center;
     }
 
     .zyro-btn {
@@ -167,7 +166,7 @@
   container.id = 'zyro-algo-container';
   container.innerHTML = `
     <div class="zyro-header" id="zyroDrag">
-      <div class="zyro-brand">⚡ <span>ZYRO</span> ULTRA AI V2</div>
+      <div class="zyro-brand">⚡ <span>ZYRO</span> ULTRA PRO V3</div>
       <div class="zyro-ctrls">
         <span id="zyroMinBtn">—</span>
         <span id="zyroCloseBtn">✕</span>
@@ -186,7 +185,7 @@
       </div>
 
       <div class="zyro-signal-card" id="zyroSignalCard">
-        <div class="zyro-confluence" id="zyroConfluence">EMA + RSI + S/R ENGINE READY</div>
+        <div class="zyro-confluence" id="zyroConfluence">SMART EXECUTION ENGINE READY</div>
         <div class="zyro-direction" id="zyroDir" style="color:#00f2fe;">ANALYZING MARKET</div>
       </div>
 
@@ -205,19 +204,23 @@
           <input type="number" id="zyroAmt" value="1">
         </div>
         <div class="zyro-input-wrap">
-          <label>MTG MULT (X)</label>
-          <input type="number" id="zyroMtgMult" value="2.2" step="0.1">
+          <label>FILTER MODE</label>
+          <select id="zyroFilterMode">
+            <option value="RELAXED" selected>RELAXED (Recommended)</option>
+            <option value="OFF">OFF (Trade Every Signal)</option>
+            <option value="STRICT">STRICT (High Confirm)</option>
+          </select>
         </div>
       </div>
 
       <div class="zyro-inputs-grid">
         <div class="zyro-input-wrap">
-          <label>STOP LOSS ($)</label>
-          <input type="number" id="zyroSL" value="15">
+          <label>MTG MULT (X)</label>
+          <input type="number" id="zyroMtgMult" value="2.2" step="0.1">
         </div>
         <div class="zyro-input-wrap">
-          <label>TAKE PROFIT ($)</label>
-          <input type="number" id="zyroTP" value="30">
+          <label>STOP LOSS ($)</label>
+          <input type="number" id="zyroSL" value="15">
         </div>
       </div>
 
@@ -245,7 +248,7 @@
   // --- UI Controls & Dragging ---
   let isDragging = false, currentX, currentY, initialX, initialY, xOffset = 0, yOffset = 0;
   container.addEventListener("touchstart", function (e) {
-    if (e.target.tagName !== "INPUT" && e.target.tagName !== "BUTTON") {
+    if (e.target.tagName !== "INPUT" && e.target.tagName !== "BUTTON" && e.target.tagName !== "SELECT") {
       initialX = e.touches[0].clientX - xOffset;
       initialY = e.touches[0].clientY - yOffset;
       isDragging = true;
@@ -381,7 +384,7 @@
     return { upBtn, downBtn };
   }
 
-  // --- 3. TECHNICAL INDICATORS ENGINE (EMA, RSI, S/R) ---
+  // --- 3. TECHNICAL INDICATORS ENGINE ---
   let candleHistory = [];
   let curOpen = null, curHigh = null, curLow = null;
 
@@ -445,85 +448,61 @@
     return ema;
   }
 
-  function checkSRLevels(curPrice) {
-    if (candleHistory.length < 10) return { nearSupport: false, nearResistance: false };
-    let recentHighs = candleHistory.slice(-15).map(c => c.high);
-    let recentLows = candleHistory.slice(-15).map(c => c.low);
-    let maxHigh = Math.max(...recentHighs);
-    let minLow = Math.min(...recentLows);
-
-    let tolerance = (maxHigh - minLow) * 0.08;
-    return {
-      nearResistance: Math.abs(curPrice - maxHigh) <= tolerance,
-      nearSupport: Math.abs(curPrice - minLow) <= tolerance
-    };
-  }
-
-  // --- 4. ADVANCED MULTI-INDICATOR DECISION ENGINE ---
-  function analyzeAdvancedTradingDecision(curPrice) {
-    if (curOpen === null || candleHistory.length < 5) {
-      return { direction: "WAIT", pattern: "BUILDING HISTORICAL DATA", confidence: 0 };
+  // --- 4. SMART BALANCED DECISION ENGINE ---
+  function analyzeSmartTradingDecision(curPrice) {
+    if (curOpen === null) {
+      return { direction: "CALL", pattern: "DEFAULT BULLISH FLOW", confidence: 80 };
     }
 
     const curIsGreen = curPrice >= curOpen;
     const curBody = Math.abs(curPrice - curOpen);
     const curUpperWick = curHigh - Math.max(curOpen, curPrice);
     const curLowerWick = Math.min(curOpen, curPrice) - curLow;
-    const prev = candleHistory[candleHistory.length - 1];
+    const prev = candleHistory.length > 0 ? candleHistory[candleHistory.length - 1] : null;
 
-    let baseDir = null;
-    let rawPattern = "";
+    let baseDir = curIsGreen ? "CALL" : "PUT";
+    let rawPattern = curIsGreen ? "BULLISH MOMENTUM" : "BEARISH MOMENTUM";
 
-    // 1. Candle Patterns
+    // 1. Core Candle Patterns
     if (prev && prev.body > 0.00005) {
-      if (!prev.isGreen && curIsGreen && curBody > prev.body * 1.15) {
+      if (!prev.isGreen && curIsGreen && curBody > prev.body * 1.1) {
         baseDir = "CALL"; rawPattern = "BULLISH ENGULFING";
-      } else if (prev.isGreen && !curIsGreen && curBody > prev.body * 1.15) {
+      } else if (prev.isGreen && !curIsGreen && curBody > prev.body * 1.1) {
         baseDir = "PUT"; rawPattern = "BEARISH ENGULFING";
       }
     }
 
-    if (!baseDir) {
-      if (curLowerWick > curBody * 1.8 && curUpperWick < curBody * 0.6) {
-        baseDir = "CALL"; rawPattern = "BULLISH HAMMER";
-      } else if (curUpperWick > curBody * 1.8 && curLowerWick < curBody * 0.6) {
-        baseDir = "PUT"; rawPattern = "SHOOTING STAR";
-      } else {
-        baseDir = curIsGreen ? "CALL" : "PUT";
-        rawPattern = curIsGreen ? "BULLISH MOMENTUM" : "BEARISH MOMENTUM";
-      }
+    if (curLowerWick > curBody * 1.5 && curUpperWick < curBody * 0.7) {
+      baseDir = "CALL"; rawPattern = "BULLISH HAMMER";
+    } else if (curUpperWick > curBody * 1.5 && curLowerWick < curBody * 0.7) {
+      baseDir = "PUT"; rawPattern = "SHOOTING STAR";
     }
 
-    // 2. Technical Filters (EMA & RSI)
+    const filterMode = document.getElementById('zyroFilterMode')?.value || 'RELAXED';
+
+    // If Filter is OFF, trade directly on price action without restrictions
+    if (filterMode === 'OFF') {
+      return { direction: baseDir, pattern: `${rawPattern} [NO FILTER]`, confidence: 90 };
+    }
+
+    // 2. Indicator Checks (Relaxed or Strict)
     const rsi = calculateRSI(14);
-    const emaFast = calculateEMA(9);
-    const emaSlow = calculateEMA(21);
-    const sr = checkSRLevels(curPrice);
+    const emaFast = calculateEMA(7);
+    const emaSlow = calculateEMA(14);
 
-    // RSI Overbought / Oversold Check
-    if (baseDir === "CALL" && rsi > 70) {
-      return { direction: "WAIT", pattern: "RSI OVERBOUGHT (>70)", confidence: 0 };
-    }
-    if (baseDir === "PUT" && rsi < 30) {
-      return { direction: "WAIT", pattern: "RSI OVERSOLD (<30)", confidence: 0 };
-    }
-
-    // EMA Trend Alignment
-    if (emaFast && emaSlow) {
-      if (baseDir === "CALL" && emaFast < emaSlow) {
-        return { direction: "WAIT", pattern: "FILTERED: DOWNTREND (EMA)", confidence: 0 };
+    if (filterMode === 'RELAXED') {
+      // Only block extreme RSI values (Over 82 or Under 18)
+      if (baseDir === "CALL" && rsi > 82) return { direction: "WAIT", pattern: "EXTREME OVERBOUGHT (RSI > 82)" };
+      if (baseDir === "PUT" && rsi < 18) return { direction: "WAIT", pattern: "EXTREME OVERSOLD (RSI < 18)" };
+    } 
+    else if (filterMode === 'STRICT') {
+      if (baseDir === "CALL" && rsi > 70) return { direction: "WAIT", pattern: "RSI OVERBOUGHT (>70)" };
+      if (baseDir === "PUT" && rsi < 30) return { direction: "WAIT", pattern: "RSI OVERSOLD (<30)" };
+      
+      if (emaFast && emaSlow) {
+        if (baseDir === "CALL" && emaFast < emaSlow) return { direction: "WAIT", pattern: "EMA DOWNTREND FILTER" };
+        if (baseDir === "PUT" && emaFast > emaSlow) return { direction: "WAIT", pattern: "EMA UPTREND FILTER" };
       }
-      if (baseDir === "PUT" && emaFast > emaSlow) {
-        return { direction: "WAIT", pattern: "FILTERED: UPTREND (EMA)", confidence: 0 };
-      }
-    }
-
-    // S/R Level Confirmation
-    if (baseDir === "CALL" && sr.nearResistance) {
-      return { direction: "WAIT", pattern: "REJECTED AT RESISTANCE", confidence: 0 };
-    }
-    if (baseDir === "PUT" && sr.nearSupport) {
-      return { direction: "WAIT", pattern: "REJECTED AT SUPPORT", confidence: 0 };
     }
 
     return { direction: baseDir, pattern: rawPattern, confidence: 92 };
@@ -559,13 +538,12 @@
       currentAmount = baseAmount;
       mtgMultiplier = parseFloat(document.getElementById('zyroMtgMult').value) || 2.2;
       stopLossLimit = parseFloat(document.getElementById('zyroSL').value) || 15;
-      takeProfitLimit = parseFloat(document.getElementById('zyroTP').value) || 30;
       currentStep = 0;
 
       toggleBtn.className = 'zyro-btn zyro-btn-stop';
       toggleBtn.innerText = 'STOP AUTO TRADING';
       playSoundFX('sniper');
-      speakVoice("Zyro Ultra Activated");
+      speakVoice("Zyro Auto Trading Started");
     } else {
       toggleBtn.className = 'zyro-btn zyro-btn-start';
       toggleBtn.innerText = 'START AUTO TRADING';
@@ -584,11 +562,12 @@
     baseAmount = parseFloat(document.getElementById('zyroAmt').value) || 1;
     if (currentStep === 0) currentAmount = baseAmount;
 
-    const analysis = analyzeAdvancedTradingDecision(curP);
+    let analysis = analyzeSmartTradingDecision(curP);
 
     if (analysis.direction === "WAIT") {
-      alert(`⚠️ Trade Skipped by Filter: ${analysis.pattern}`);
-      return;
+      // Force instant trade even if filtered
+      analysis.direction = (curP >= (curOpen || curP)) ? 'CALL' : 'PUT';
+      analysis.pattern = 'INSTANT OVERRIDE';
     }
 
     cardConfluence.innerText = `[INSTANT: ${analysis.pattern}]`;
@@ -663,9 +642,6 @@
       if (netProfit <= -stopLossLimit) {
         alert(`⚠️ STOP LOSS HIT (-$${stopLossLimit}). Auto Trade Stopped!`);
         if (isRunning) toggleBtn.click();
-      } else if (netProfit >= takeProfitLimit) {
-        alert(`🎉 TAKE PROFIT HIT (+$${takeProfitLimit})! Target Achieved!`);
-        if (isRunning) toggleBtn.click();
       }
     }, 60000);
   }
@@ -683,12 +659,12 @@
       if (s === 59) archiveCompletedCandle(curP);
     }
 
-    // Update RSI Display
+    // Update RSI
     const currentRsi = calculateRSI(14);
     rsiEl.innerText = currentRsi;
     rsiEl.style.color = currentRsi > 70 ? '#ef4444' : (currentRsi < 30 ? '#00e676' : '#38bdf8');
 
-    // Check Asset & Payout Guard
+    // Asset Detection
     const detectedAsset = getActiveQuotexAsset();
     const activePayout = getActivePayout();
 
@@ -696,29 +672,20 @@
       currentActiveAsset = detectedAsset;
       assetEl.innerText = currentActiveAsset;
       payoutEl.innerText = `${activePayout}%`;
-      payoutEl.style.color = activePayout >= 80 ? '#00e676' : '#ef4444';
 
       candleHistory = [];
       curOpen = null;
-      cardConfluence.innerText = `NEW PAIR: ${currentActiveAsset}`;
-      cardDir.innerText = 'SYNCING INDICATORS...';
+      cardConfluence.innerText = `ACTIVE PAIR: ${currentActiveAsset}`;
+      cardDir.innerText = 'READING CANDLES...';
       cardDir.style.color = '#38bdf8';
-      speakVoice(`Switched to ${currentActiveAsset}`);
     }
 
     if (activeMode !== 'auto' || !isRunning || isWaitingResult) return;
 
-    // Payout Guard Filter
-    if (activePayout < 80) {
-      cardConfluence.innerText = `[LOW PAYOUT: ${activePayout}%]`;
-      cardDir.innerText = 'SKIPPING LOW PAYOUT';
-      cardDir.style.color = '#f59e0b';
-      return;
-    }
-
     if (s >= 45 && s <= 56) {
-      let analysis = analyzeAdvancedTradingDecision(curP);
+      let analysis = analyzeSmartTradingDecision(curP);
 
+      // Martingale ALWAYS forces trade execution (bypasses filter)
       if (currentStep > 0 && lastTradeDirection) {
         analysis.direction = lastTradeDirection;
         analysis.pattern = `Martingale Recovery Step ${currentStep}`;
@@ -726,7 +693,7 @@
 
       cardConfluence.innerText = `[${analysis.pattern}]`;
       if (analysis.direction === 'WAIT') {
-        cardDir.innerText = '✋ SIGNAL FILTERED';
+        cardDir.innerText = '✋ FILTERED (HOLDING)';
         cardDir.style.color = '#f59e0b';
       } else {
         cardDir.innerText = `${analysis.direction === 'CALL' ? '▲ SNIPER CALL' : '▼ SNIPER PUT'} (${58 - s}s)`;
@@ -735,8 +702,9 @@
     }
     else if (s === 58 && lastTradedMinute !== m) {
       lastTradedMinute = m;
-      let analysis = analyzeAdvancedTradingDecision(curP);
+      let analysis = analyzeSmartTradingDecision(curP);
 
+      // Martingale ALWAYS forces trade execution
       if (currentStep > 0 && lastTradeDirection) {
         analysis.direction = lastTradeDirection;
         analysis.pattern = `Martingale Recovery Step ${currentStep}`;
@@ -748,14 +716,16 @@
         cardDir.style.color = analysis.direction === 'CALL' ? '#00e676' : '#ef4444';
 
         executeSniperTrade(analysis.direction, analysis.pattern);
+      } else {
+        console.log(`[ZYRO ULTRA] Signal skipped at 58s due to ${analysis.pattern}`);
       }
     } 
     else if (s < 45) {
-      cardConfluence.innerText = `ANALYZING ${candleHistory.length} CANDLES`;
-      cardDir.innerText = 'MONITORING STRUCTURE...';
+      cardConfluence.innerText = `READY | CANDLES: ${candleHistory.length}`;
+      cardDir.innerText = 'WATCHING MARKET...';
       cardDir.style.color = '#00f2fe';
     }
   }, 1000);
 
-  speakVoice("Zyro Ultra System Engine Ready");
+  speakVoice("Zyro Ultra V3 System Ready");
 })();
